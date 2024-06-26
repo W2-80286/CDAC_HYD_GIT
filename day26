@@ -1,0 +1,374 @@
+create database day26 ;
+
+use day26;
+
+*** Agripreneur & Farmer Role Tables ***
+ 
+CREATE TABLE ServiceCategory (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Agripreneur (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    person_name VARCHAR(100) NOT NULL,
+    id_no VARCHAR(50) NOT NULL UNIQUE,
+    venture_name VARCHAR(100) NOT NULL,
+    service_category_id INT NOT NULL,
+    service_cost INT NOT NULL,
+    state VARCHAR(100) NOT NULL,
+    district VARCHAR(100) NOT NULL,
+    taluka VARCHAR(100) NOT NULL,
+    village VARCHAR(100) NOT NULL,
+    pincode VARCHAR(6) NOT NULL,
+    mobile VARCHAR(15) NOT NULL UNIQUE,
+    landline VARCHAR(15),
+    email VARCHAR(100) NOT NULL,
+    nti_name VARCHAR(100),
+    geo_coordinates VARCHAR(50),
+    restricted_info TEXT,
+    annual_turnover INT,
+    annual_income INT,
+    employees INT,
+    farmers_covered INT,
+    villages_covered INT,
+    bank_loan BOOLEAN,
+    subsidy BOOLEAN,
+    keywords TEXT,
+    images JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Farmer (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    state VARCHAR(100) NOT NULL,
+    district VARCHAR(100) NOT NULL,
+    taluka VARCHAR(100) NOT NULL,
+    village VARCHAR(100) NOT NULL,
+    pincode VARCHAR(6) NOT NULL,
+    mobile VARCHAR(15) NOT NULL UNIQUE,
+    email VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Service (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    agripreneur_id INT,
+    FOREIGN KEY (agripreneur_id) REFERENCES Agripreneur(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    agripreneur_id INT,
+    url VARCHAR(255) NOT NULL,
+    description TEXT,
+    FOREIGN KEY (agripreneur_id) REFERENCES Agripreneur(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Query (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    agripreneur_id INT,
+    farmer_id INT,
+    query_text TEXT NOT NULL,
+    response_text TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (agripreneur_id) REFERENCES Agripreneur(id),
+    FOREIGN KEY (farmer_id) REFERENCES Farmer(id)
+);
+
+
+CREATE TABLE Review (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    agripreneur_id INT,
+    farmer_id INT,
+    rating INT NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (agripreneur_id) REFERENCES Agripreneur(id) ON DELETE CASCADE,
+    FOREIGN KEY (farmer_id) REFERENCES Farmer(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Feedback (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    agripreneur_id INT,
+    farmer_id INT,
+    feedback TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (agripreneur_id) REFERENCES Agripreneur(id) ON DELETE CASCADE,
+    FOREIGN KEY (farmer_id) REFERENCES Farmer(id) ON DELETE CASCADE
+);
+
+CREATE TABLE FarmerVisits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    agripreneur_id INT,
+    farmer_id INT,
+    visit_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (agripreneur_id) REFERENCES Agripreneur(id) ON DELETE CASCADE,
+    FOREIGN KEY (farmer_id) REFERENCES Farmer(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE OTP (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    mobile VARCHAR(15) NOT NULL,
+    otp_code VARCHAR(6) NOT NULL,
+    expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    used BOOLEAN DEFAULT FALSE,
+    user_type ENUM('farmer', 'agripreneur') NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Agripreneur(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES Farmer(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Languages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(10) NOT NULL
+);
+
+
+
+
+** Insert Record **
+
+INSERT INTO Farmer (
+    name, state, district, taluka, village, pincode, mobile, email
+)
+VALUES 
+    ('Rajendra Pawar', 'Maharashtra', 'Solapur', 'Madha', 'Manegaon', '411412', '9768985881', 'rajendrapawar6229@gmail.com'),
+    ('Suresh Kumar', 'Karnataka', 'Bangalore', 'Whitefield', 'Kadugodi', '560067', '9876543210', 'sureshkumar@example.com'),
+    ('Geeta Devi', 'Bihar', 'Patna', 'Patna Sadar', 'Kankarbagh', '800020', '7890123456', 'geetadevi@example.com'),
+    ('Ashok Singh', 'Uttar Pradesh', 'Lucknow', 'Gomti Nagar', 'Vijay Khand', '226010', '7012345678', 'ashoksingh@example.com');
+
+INSERT INTO Agripreneur (
+    person_name, id_no, venture_name, service_category_id, service_cost,
+    state, district, taluka, village, pincode, mobile, email,
+    annual_turnover, annual_income, employees, farmers_covered, villages_covered,
+    bank_loan, subsidy, keywords, images
+)
+VALUES 
+    ('Tanuja Pawar', '101', 'Sorting Nursery', 1, 1000,
+     'Maharashtra', 'Solapur', 'Madha', 'Kapsewadi', '413002',
+     '9698336319', 'tanujapawar@gmail.com', 1940000, 4450000, 10, 100, 27,
+     TRUE, TRUE, 'Fruit plants, Vegetable seeds, Flowers', 
+     '{"image1": "image1.jpg", "image2": "image2.jpg"}'),
+    ('Vikram Singh', '102', 'Organic Farming', 4, 1200,
+     'Uttar Pradesh', 'Lucknow', 'Indira Nagar', 'Vishal Khand', '226016',
+     '9876543210', 'vikramsingh@example.com', 1800000, 4000000, 8, 80, 20,
+     TRUE, FALSE, 'Organic vegetables, Herbs', 
+     '{"image1": "image3.jpg", "image2": "image4.jpg"}'),
+    ('Priya Sharma', '103', 'Dairy Farm', 5, 800,
+     'Haryana', 'Gurgaon', 'Sohna', 'Bhondsi', '122102',
+     '7890123456', 'priyasharma@example.com', 1500000, 3500000, 12, 120, 30,
+     FALSE, TRUE, 'Milk products, Cheese, Butter', 
+     '{"image1": "image5.jpg", "image2": "image6.jpg"}'),
+    ('Amit Patel', '104', 'Poultry Farm', 6, 1500,
+     'Gujarat', 'Ahmedabad', 'Sanand', 'Bopal', '380058',
+     '7012345678', 'amitpatel@example.com', 2200000, 5000000, 15, 150, 40,
+     TRUE, TRUE, 'Chicken, Eggs', 
+     '{"image1": "image7.jpg", "image2": "image8.jpg"}');
+
+INSERT INTO ServiceCategory (name)
+VALUES 
+    ('Fruit Plants'),
+    ('Vegetable Seeds'),
+    ('Flowers'),
+    ('Organic Farming'),
+    ('Dairy Farm'),
+    ('Poultry Farm');
+
+INSERT INTO Service (name, agripreneur_id)
+VALUES 
+    ('Mango Plants', 1),
+    ('Tomato Seeds', 1),
+    ('Rose Flowers', 1),
+    ('Herbal Plants', 2),
+    ('Cow Farming', 3),
+    ('Chicken Farming', 4);
+
+
+INSERT INTO Images (agripreneur_id, url, description)
+VALUES 
+    (1, 'https://example.com/image1.jpg', 'Sorting Nursery Image 1'),
+    (1, 'https://example.com/image2.jpg', 'Sorting Nursery Image 2'),
+    (2, 'https://example.com/image3.jpg', 'Organic Farming Image 1'),
+    (2, 'https://example.com/image4.jpg', 'Organic Farming Image 2'),
+    (3, 'https://example.com/image5.jpg', 'Dairy Farm Image 1'),
+    (3, 'https://example.com/image6.jpg', 'Dairy Farm Image 2'),
+    (4, 'https://example.com/image7.jpg', 'Poultry Farm Image 1'),
+    (4, 'https://example.com/image8.jpg', 'Poultry Farm Image 2');
+
+
+INSERT INTO Query (agripreneur_id, farmer_id, query_text, response_text)
+VALUES
+    (1, 1, 'How do I improve soil fertility?', 'You can use organic compost for better results.'),
+    (2, 2, 'What crop is suitable for my region?', 'Wheat and barley grow well in your climate.'),
+    (3, 3, 'How often should I water my tomato plants?', 'Tomatoes require consistent watering, especially during dry periods.'),
+    (4, 4, 'What pesticides should I use for aphids?', NULL);
+
+
+INSERT INTO Review (agripreneur_id, farmer_id, rating, comment)
+VALUES 
+    (1, 1, 4, 'Excellent service provided.'),
+    (2, 2, 5, 'Very knowledgeable about organic farming.'),
+    (3, 3, 3, 'Could improve on delivery timings.'),
+    (4, 4, 4, 'Good quality poultry products.');
+    
+   
+INSERT INTO Review (agripreneur_id, farmer_id, rating, comment)
+VALUES 
+    (1, 1, 4, 'Excellent service provided.'),
+    (2, 2, 5, 'Very knowledgeable about organic farming.'),
+    (3, 3, 3, 'Could improve on delivery timings.'),
+    (4, 4, 4, 'Good quality poultry products.');
+
+ 
+INSERT INTO FarmerVisits (agripreneur_id, farmer_id, visit_timestamp)
+VALUES 
+    (1, 1, '2024-06-25 10:30:00'),
+    (2, 2, '2024-06-24 14:15:00'),
+    (3, 3, '2024-06-23 11:00:00'),
+    (4, 4, '2024-06-22 09:45:00');
+    
+INSERT INTO OTP (mobile, otp_code, expiration, used, user_type, user_id)
+VALUES 
+    ('9768985881', '123456', NOW() + INTERVAL 5 MINUTE, FALSE, 'farmer', 1),
+    ('9876543210', '234567', NOW() + INTERVAL 5 MINUTE, FALSE, 'agripreneur', 2),
+    ('7890123456', '345678', NOW() + INTERVAL 5 MINUTE, FALSE, 'farmer', 3),
+    ('7012345678', '456789', NOW() + INTERVAL 5 MINUTE, FALSE, 'agripreneur', 4);
+
+INSERT INTO Languages (name, code)
+VALUES 
+    ('English', 'en'),
+    ('Hindi', 'hi'),
+    ('Marathi', 'mr'),
+    ('Bengali', 'bn'),
+    ('Gujarati', 'gu'),
+    ('Tamil', 'ta'),
+    ('Telugu', 'te'),
+    ('Kannada', 'kn'),
+    ('Malayalam', 'ml'),
+    ('Odia', 'or');
+
+** CREATE VIEWS **
+
+Views for Agripreneurs:
+
+1. Agripreneur Services and Categories View:
+
+This view combines information about agripreneurs along with the categories and services they offer.
+
+CREATE VIEW Agripreneur_Services_View AS
+SELECT 
+    a.id AS agripreneur_id,
+    a.person_name AS agripreneur_name,
+    a.venture_name,
+    sc.name AS service_category,
+    s.name AS service_name,
+    a.service_cost,
+    a.state,
+    a.district,
+    a.taluka,
+    a.village,
+    a.pincode,
+    a.mobile,
+    a.email
+FROM Agripreneur a
+LEFT JOIN Service s ON a.id = s.agripreneur_id
+LEFT JOIN ServiceCategory sc ON a.service_category_id = sc.id;
+
+2. Agripreneur Reviews View:
+
+This view shows reviews provided to agripreneurs by farmers.
+
+CREATE VIEW Agripreneur_Reviews_View AS
+SELECT 
+    r.id AS review_id,
+    r.agripreneur_id,
+    a.person_name AS agripreneur_name,
+    r.farmer_id,
+    f.name AS farmer_name,
+    r.rating,
+    r.comment,
+    r.created_at AS review_timestamp
+FROM Review r
+JOIN Agripreneur a ON r.agripreneur_id = a.id
+JOIN Farmer f ON r.farmer_id = f.id;
+
+3. Agripreneur Query Responses View:
+
+This view displays queries received by agripreneurs along with their responses.
+CREATE VIEW Agripreneur_Query_Responses_View AS
+SELECT 
+    q.id AS query_id,
+    q.agripreneur_id,
+    a.person_name AS agripreneur_name,
+    q.farmer_id,
+    f.name AS farmer_name,
+    q.query_text,
+    q.response_text,
+    q.created_at AS query_timestamp,
+    q.created_at AS response_timestamp
+FROM Query q
+JOIN Agripreneur a ON q.agripreneur_id = a.id
+JOIN Farmer f ON q.farmer_id = f.id;
+
+
+Views for Farmers:
+1. Farmer Visits to Agripreneurs View:
+
+This view tracks visits made by farmers to agripreneurs.
+
+CREATE VIEW Farmer_Agripreneur_Visits_View AS
+SELECT 
+    fv.id AS visit_id,
+    fv.agripreneur_id,
+    a.person_name AS agripreneur_name,
+    fv.farmer_id,
+    f.name AS farmer_name,
+    fv.visit_timestamp
+FROM FarmerVisits fv
+JOIN Agripreneur a ON fv.agripreneur_id = a.id
+JOIN Farmer f ON fv.farmer_id = f.id;
+
+
+2. Farmer Reviews View:
+
+This view shows reviews provided by farmers for agripreneurs.
+
+CREATE VIEW Farmer_Reviews_View AS
+SELECT 
+    r.id AS review_id,
+    r.agripreneur_id,
+    a.person_name AS agripreneur_name,
+    r.farmer_id,
+    f.name AS farmer_name,
+    r.rating,
+    r.comment,
+    r.created_at AS review_timestamp
+FROM Review r
+JOIN Agripreneur a ON r.agripreneur_id = a.id
+JOIN Farmer f ON r.farmer_id = f.id;
+
+3. Farmer Queries View:
+
+This view displays queries submitted by farmers to agripreneurs.
+
+CREATE VIEW Farmer_Queries_View AS
+SELECT 
+    q.id AS query_id,
+    q.agripreneur_id,
+    a.person_name AS agripreneur_name,
+    q.farmer_id,
+    f.name AS farmer_name,
+    q.query_text,
+    q.response_text,
+    q.created_at AS query_timestamp,
+    q.created_at AS response_timestamp
+FROM Query q
+JOIN Agripreneur a ON q.agripreneur_id = a.id
+JOIN Farmer f ON q.farmer_id = f.id;
+
